@@ -4,20 +4,29 @@ import android.os.Bundle
 import android.view.View.GONE
 import android.view.View.VISIBLE
 import android.widget.Toast
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import ru.geekbrains.dictionary.R
 import ru.geekbrains.dictionary.databinding.ActivityMainBinding
 import ru.geekbrains.dictionary.model.entities.AppState
 import ru.geekbrains.dictionary.model.entities.DataModel
-import ru.geekbrains.dictionary.presenter.Presenter
+import ru.geekbrains.dictionary.model.repository.Repository
 import ru.geekbrains.dictionary.view.base.BaseActivity
 import ru.geekbrains.dictionary.view.base.View
 import ru.geekbrains.dictionary.view.main.adapter.MainAdapter
+import javax.inject.Inject
 
-class MainActivity : BaseActivity<AppState>() {
+class MainActivity : BaseActivity<AppState, Repository>() {
+
+    override fun injectViewModel() {
+        viewModel = getViewModel()
+    }
+    private val adapter: MainAdapter by lazy { MainAdapter(onListItemClickListener, emptyList()) }
 
     private lateinit var binding: ActivityMainBinding
-    private var adapter: MainAdapter? = null
+    private lateinit var recyclerView: RecyclerView
     private val onListItemClickListener: MainAdapter.OnListItemClickListener =
         object : MainAdapter.OnListItemClickListener {
             override fun onItemClick(data: DataModel) {
@@ -25,17 +34,15 @@ class MainActivity : BaseActivity<AppState>() {
             }
         }
 
-    override fun createPresenter(): Presenter<AppState, View> {
-        return MainPresenterImpl()
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(R.layout.activity_main)
+        recyclerView = binding.mainActivityRecyclerview
+
         binding.search.setEndIconOnClickListener {
             println("here")
-            presenter.getData(binding.tvSearch.text.toString(), true)
+            viewModel.getData(binding.tvSearch.text.toString(), true)
         }
     }
 
@@ -48,9 +55,9 @@ class MainActivity : BaseActivity<AppState>() {
                 } else {
                     showViewSuccess()
                     if (adapter == null) {
-                        binding.mainActivityRecyclerview.layoutManager =
-                            LinearLayoutManager(applicationContext)
-                        binding.mainActivityRecyclerview.adapter =
+                        recyclerView.layoutManager =
+                            LinearLayoutManager(baseContext)
+                        recyclerView.adapter =
                             MainAdapter(onListItemClickListener, dataModel)
                     } else {
                         adapter!!.setData(dataModel)
@@ -78,7 +85,7 @@ class MainActivity : BaseActivity<AppState>() {
         showViewError()
         binding.errorTextview.text = error ?: getString(R.string.undefined_error)
         binding.reloadButton.setOnClickListener {
-            presenter.getData("hi", true)
+            viewModel.getData("hi", true)
         }
     }
 
@@ -100,8 +107,4 @@ class MainActivity : BaseActivity<AppState>() {
         binding.errorLinearLayout.visibility = VISIBLE
     }
 
-    companion object {
-        private const val BOTTOM_SHEET_FRAGMENT_DIALOG_TAG =
-            "74a54328-5d62-46bf-ab6b-cbf5fgt0-092395"
-    }
 }
