@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import ru.geekbrains.dictionary.R
 import ru.geekbrains.dictionary.databinding.ActivityMainBinding
+import ru.geekbrains.dictionary.di.Injector
 import ru.geekbrains.dictionary.model.entities.AppState
 import ru.geekbrains.dictionary.model.entities.DataModel
 import ru.geekbrains.dictionary.model.repository.Repository
@@ -36,14 +37,17 @@ class MainActivity : BaseActivity<AppState, Repository>() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(R.layout.activity_main)
-        recyclerView = binding.mainActivityRecyclerview
-
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        Injector.mainActivityComponent.inject(this)
+        injectViewModel()
+        viewModel.getData("hi", true)
         binding.search.setEndIconOnClickListener {
             println("here")
             viewModel.getData(binding.tvSearch.text.toString(), true)
         }
+        recyclerView = binding.mainActivityRecyclerview
+        recyclerView.layoutManager = LinearLayoutManager(baseContext)
     }
 
     override fun renderData(appState: AppState) {
@@ -54,14 +58,7 @@ class MainActivity : BaseActivity<AppState, Repository>() {
                     showErrorScreen(getString(R.string.empty_server_response_on_success))
                 } else {
                     showViewSuccess()
-                    if (adapter == null) {
-                        recyclerView.layoutManager =
-                            LinearLayoutManager(baseContext)
-                        recyclerView.adapter =
-                            MainAdapter(onListItemClickListener, dataModel)
-                    } else {
-                        adapter!!.setData(dataModel)
-                    }
+                    adapter.setData(dataModel)
                 }
             }
             is AppState.Loading -> {

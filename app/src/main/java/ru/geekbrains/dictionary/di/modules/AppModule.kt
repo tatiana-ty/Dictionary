@@ -7,6 +7,7 @@ import dagger.Module
 import dagger.Provides
 import ru.geekbrains.dictionary.model.datasource.local.DatabaseStorage
 import ru.geekbrains.dictionary.model.repository.IRepository
+import ru.geekbrains.dictionary.model.repository.Repository
 import javax.inject.Singleton
 
 @Module(includes = [AppModule.InnerAppModule::class])
@@ -29,7 +30,7 @@ class AppModule(private val context: Context) {
 
         @Binds
         @Singleton
-        fun provideRepository(repository: IRepository): IRepository
+        fun provideRepository(repository: Repository): IRepository
 
     }
 }

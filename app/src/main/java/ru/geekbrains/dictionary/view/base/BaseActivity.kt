@@ -12,6 +12,7 @@ import ru.geekbrains.dictionary.model.repository.IRepository
 import ru.geekbrains.dictionary.utils.isOnline
 import ru.geekbrains.dictionary.viewModel.BaseViewModel
 import androidx.lifecycle.ViewModelProviders
+import ru.geekbrains.dictionary.view.main.MainViewModel
 import javax.inject.Inject
 
 abstract class BaseActivity<T : AppState, I : IRepository> : AppCompatActivity() {
@@ -52,7 +53,7 @@ abstract class BaseActivity<T : AppState, I : IRepository> : AppCompatActivity()
         private const val DIALOG_FRAGMENT_TAG = "74a54328-5d62-46bf-ab6b-cbf5d8c79522"
     }
 
-    protected open lateinit var viewModel: BaseViewModel<T>
+    protected open lateinit var viewModel: MainViewModel
 
     @Inject
     protected open lateinit var viewModelFactory: ViewModelProvider.Factory
