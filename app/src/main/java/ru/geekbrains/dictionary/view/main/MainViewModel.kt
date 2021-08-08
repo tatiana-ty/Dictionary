@@ -1,53 +1,40 @@
 package ru.geekbrains.dictionary.view.main
 
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.disposables.Disposable
-import io.reactivex.observers.DisposableObserver
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import ru.geekbrains.dictionary.model.entities.AppState
-import ru.geekbrains.dictionary.model.entities.DataModel
-import ru.geekbrains.dictionary.model.repository.IRepository
-import ru.geekbrains.dictionary.model.repository.Repository
-import ru.geekbrains.dictionary.rx.SchedulerProvider
 import ru.geekbrains.dictionary.utils.parseSearchResults
 import ru.geekbrains.dictionary.viewModel.BaseViewModel
 import javax.inject.Inject
 
-class MainViewModel @Inject constructor(private val repository: IRepository) :
-    BaseViewModel() {
+class MainViewModel @Inject constructor(private val interactor: MainInteractor) :
+    BaseViewModel<AppState>() {
 
-    private var appState: AppState? = null
-    private var compositeDisposable = CompositeDisposable()
-    private var schedulerProvider = SchedulerProvider()
-    private var liveDataForViewToObserve = MutableLiveData<AppState>()
+    private val liveDataForViewToObserve: LiveData<AppState> = _mutableLiveData
 
     fun subscribe(): LiveData<AppState> {
         return liveDataForViewToObserve
     }
 
-    fun getData(word: String, isOnline: Boolean) {
-        compositeDisposable.add(
-            repository.getData(word)
-                .subscribeOn(schedulerProvider.io())
-                .observeOn(schedulerProvider.ui())
-                .doOnSubscribe(doOnSubscribe())
-                .subscribe(
-                    ::onSuccess,
-                    ::onError
-                )
-        )
+    override fun getData(word: String, isOnline: Boolean) {
+        _mutableLiveData.value = AppState.Loading(null)
+        cancelJob()
+        viewModelCoroutineScope.launch { startInteractor(word, isOnline) }
     }
 
-    private fun doOnSubscribe(): (Disposable) -> Unit =
-        { liveDataForViewToObserve.value = AppState.Loading(null) }
-
-    private fun onSuccess(list: List<DataModel>) {
-        appState = AppState.Success(list)
-        liveDataForViewToObserve.value = appState
+    //Doesn't have to use withContext for Retrofit call if you use .addCallAdapterFactory(CoroutineCallAdapterFactory()). The same goes for Room
+    private suspend fun startInteractor(word: String, isOnline: Boolean) = withContext(Dispatchers.IO) {
+        _mutableLiveData.postValue(parseSearchResults(interactor.getData(word, isOnline)))
     }
 
-    private fun onError(e: Throwable) {
-        liveDataForViewToObserve.value = AppState.Error(e)
+    override fun handleError(error: Throwable) {
+        _mutableLiveData.postValue(AppState.Error(error))
+    }
+
+    override fun onCleared() {
+        _mutableLiveData.value = AppState.Success(null)
+        super.onCleared()
     }
 }

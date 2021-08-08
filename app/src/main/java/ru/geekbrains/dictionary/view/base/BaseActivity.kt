@@ -3,19 +3,16 @@ package ru.geekbrains.dictionary.view.base
 import android.os.Bundle
 import android.os.PersistableBundle
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
-import ru.geekbrains.dictionary.utils.ui.AlertDialogFragment
 import ru.geekbrains.dictionary.R
 import ru.geekbrains.dictionary.model.entities.AppState
-import ru.geekbrains.dictionary.model.repository.IRepository
 import ru.geekbrains.dictionary.utils.isOnline
+import ru.geekbrains.dictionary.utils.ui.AlertDialogFragment
 import ru.geekbrains.dictionary.viewModel.BaseViewModel
-import androidx.lifecycle.ViewModelProviders
-import ru.geekbrains.dictionary.view.main.MainViewModel
-import javax.inject.Inject
+import ru.geekbrains.dictionary.viewModel.Interactor
 
-abstract class BaseActivity<T : AppState, I : IRepository> : AppCompatActivity() {
+abstract class BaseActivity<T : AppState, I : Interactor<T>> : AppCompatActivity() {
+
+    abstract val model: BaseViewModel<T>
 
     protected var isNetworkAvailable: Boolean = false
 
@@ -40,7 +37,8 @@ abstract class BaseActivity<T : AppState, I : IRepository> : AppCompatActivity()
     }
 
     protected fun showAlertDialog(title: String?, message: String?) {
-        AlertDialogFragment.newInstance(title, message).show(supportFragmentManager, DIALOG_FRAGMENT_TAG)
+        AlertDialogFragment.newInstance(title, message)
+            .show(supportFragmentManager, DIALOG_FRAGMENT_TAG)
     }
 
     private fun isDialogNull(): Boolean {
@@ -52,15 +50,5 @@ abstract class BaseActivity<T : AppState, I : IRepository> : AppCompatActivity()
     companion object {
         private const val DIALOG_FRAGMENT_TAG = "74a54328-5d62-46bf-ab6b-cbf5d8c79522"
     }
-
-    protected open lateinit var viewModel: MainViewModel
-
-    @Inject
-    protected open lateinit var viewModelFactory: ViewModelProvider.Factory
-
-    protected abstract fun injectViewModel()
-
-    protected inline fun <reified T : ViewModel> getViewModel(): T =
-        ViewModelProviders.of(this, viewModelFactory)[T::class.java]
-
 }
+

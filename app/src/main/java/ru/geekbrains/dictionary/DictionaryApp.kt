@@ -1,13 +1,16 @@
 package ru.geekbrains.dictionary
 
 import android.app.Application
-import ru.geekbrains.dictionary.di.Injector
+import org.koin.core.context.startKoin
+import ru.geekbrains.dictionary.di.application
+import ru.geekbrains.dictionary.di.mainScreen
 
 class DictionaryApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
-
-        Injector.initAppComponent(this)
+        startKoin {
+            modules(listOf(application, mainScreen))
+        }
     }
 }
