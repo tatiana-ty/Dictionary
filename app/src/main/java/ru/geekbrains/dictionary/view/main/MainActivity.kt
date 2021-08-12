@@ -4,13 +4,16 @@ import android.os.Bundle
 import android.view.View.GONE
 import android.view.View.VISIBLE
 import android.widget.Toast
+import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import geekbrains.ru.translator.utils.convertMeaningsToString
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import ru.geekbrains.dictionary.R
 import ru.geekbrains.dictionary.databinding.ActivityMainBinding
 import ru.geekbrains.dictionary.model.entities.AppState
 import ru.geekbrains.dictionary.model.entities.DataModel
+import ru.geekbrains.dictionary.view.DescriptionActivity
 import ru.geekbrains.dictionary.view.base.BaseActivity
 import ru.geekbrains.dictionary.view.main.adapter.MainAdapter
 
@@ -24,7 +27,14 @@ class MainActivity : BaseActivity<AppState, MainInteractor>() {
     private val onListItemClickListener: MainAdapter.OnListItemClickListener =
         object : MainAdapter.OnListItemClickListener {
             override fun onItemClick(data: DataModel) {
-                Toast.makeText(this@MainActivity, data.text, Toast.LENGTH_SHORT).show()
+                startActivity(
+                    DescriptionActivity.getIntent(
+                        this@MainActivity,
+                        data.text!!,
+                        convertMeaningsToString(data.meanings!!),
+                        data.meanings[0].imageUrl
+                    )
+                )
             }
         }
 
@@ -43,38 +53,6 @@ class MainActivity : BaseActivity<AppState, MainInteractor>() {
         model.getData("hi", true)
     }
 
-    override fun renderData(appState: AppState) {
-        when (appState) {
-            is AppState.Success -> {
-                showViewWorking()
-                val data = appState.data
-                if (data.isNullOrEmpty()) {
-                    showAlertDialog(
-                        getString(R.string.dialog_tittle_sorry),
-                        getString(R.string.empty_server_response_on_success)
-                    )
-                } else {
-                    adapter.setData(data)
-                }
-            }
-            is AppState.Loading -> {
-                showViewLoading()
-                if (appState.progress != null) {
-                    binding.progressBarHorizontal.visibility = VISIBLE
-                    binding.progressBarRound.visibility = GONE
-                    binding.progressBarHorizontal.progress = appState.progress
-                } else {
-                    binding.progressBarHorizontal.visibility = GONE
-                    binding.progressBarRound.visibility = VISIBLE
-                }
-            }
-            is AppState.Error -> {
-                showViewWorking()
-                showAlertDialog(getString(R.string.error_stub), appState.error.message)
-            }
-        }
-    }
-
     private fun initViewModel() {
         if (binding.mainActivityRecyclerview.adapter != null) {
             throw IllegalStateException("The ViewModel should be initialised first")
@@ -84,12 +62,8 @@ class MainActivity : BaseActivity<AppState, MainInteractor>() {
         model.subscribe().observe(this@MainActivity, { renderData(it) })
     }
 
-    private fun showViewWorking() {
-        binding.progressBarRound.visibility = GONE
-    }
-
-    private fun showViewLoading() {
-        binding.progressBarRound.visibility = VISIBLE
+    override fun setDataToAdapter(data: List<DataModel>) {
+        adapter.setData(data)
     }
 
 }
