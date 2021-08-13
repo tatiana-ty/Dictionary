@@ -4,26 +4,19 @@ import android.os.Bundle
 import android.view.View.GONE
 import android.view.View.VISIBLE
 import android.widget.Toast
-import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import org.koin.androidx.viewmodel.ext.android.viewModel
 import ru.geekbrains.dictionary.R
 import ru.geekbrains.dictionary.databinding.ActivityMainBinding
-import ru.geekbrains.dictionary.di.Injector
 import ru.geekbrains.dictionary.model.entities.AppState
 import ru.geekbrains.dictionary.model.entities.DataModel
-import ru.geekbrains.dictionary.model.repository.Repository
 import ru.geekbrains.dictionary.view.base.BaseActivity
-import ru.geekbrains.dictionary.view.base.View
 import ru.geekbrains.dictionary.view.main.adapter.MainAdapter
-import javax.inject.Inject
 
-class MainActivity : BaseActivity<AppState, Repository>() {
+class MainActivity : BaseActivity<AppState, MainInteractor>() {
 
-    override fun injectViewModel() {
-        viewModel = getViewModel()
-    }
+    override lateinit var model: MainViewModel
     private val adapter: MainAdapter by lazy { MainAdapter(onListItemClickListener, emptyList()) }
 
     private lateinit var binding: ActivityMainBinding
@@ -39,26 +32,29 @@ class MainActivity : BaseActivity<AppState, Repository>() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         binding = ActivityMainBinding.inflate(layoutInflater)
-        Injector.mainActivityComponent.inject(this)
-        injectViewModel()
-        viewModel.getData("hi", true)
+        initViewModel()
         binding.search.setEndIconOnClickListener {
             println("here")
-            viewModel.getData(binding.tvSearch.text.toString(), true)
+            model.getData(binding.tvSearch.text.toString(), true)
         }
         recyclerView = binding.mainActivityRecyclerview
         recyclerView.layoutManager = LinearLayoutManager(baseContext)
+        recyclerView.adapter = adapter
+        model.getData("hi", true)
     }
 
     override fun renderData(appState: AppState) {
         when (appState) {
             is AppState.Success -> {
-                val dataModel = appState.data
-                if (dataModel == null || dataModel.isEmpty()) {
-                    showErrorScreen(getString(R.string.empty_server_response_on_success))
+                showViewWorking()
+                val data = appState.data
+                if (data.isNullOrEmpty()) {
+                    showAlertDialog(
+                        getString(R.string.dialog_tittle_sorry),
+                        getString(R.string.empty_server_response_on_success)
+                    )
                 } else {
-                    showViewSuccess()
-                    adapter.setData(dataModel)
+                    adapter.setData(data)
                 }
             }
             is AppState.Loading -> {
@@ -73,35 +69,27 @@ class MainActivity : BaseActivity<AppState, Repository>() {
                 }
             }
             is AppState.Error -> {
-                showErrorScreen(appState.error.message)
+                showViewWorking()
+                showAlertDialog(getString(R.string.error_stub), appState.error.message)
             }
         }
     }
 
-    private fun showErrorScreen(error: String?) {
-        showViewError()
-        binding.errorTextview.text = error ?: getString(R.string.undefined_error)
-        binding.reloadButton.setOnClickListener {
-            viewModel.getData("hi", true)
+    private fun initViewModel() {
+        if (binding.mainActivityRecyclerview.adapter != null) {
+            throw IllegalStateException("The ViewModel should be initialised first")
         }
+        val viewModel: MainViewModel by viewModel()
+        model = viewModel
+        model.subscribe().observe(this@MainActivity, { renderData(it) })
     }
 
-    private fun showViewSuccess() {
-        binding.mainActivityRecyclerview.visibility = VISIBLE
-        binding.progressBarHorizontal.visibility = GONE
-        binding.errorLinearLayout.visibility = GONE
+    private fun showViewWorking() {
+        binding.progressBarRound.visibility = GONE
     }
 
     private fun showViewLoading() {
-        binding.mainActivityRecyclerview.visibility = GONE
-        binding.progressBarHorizontal.visibility = VISIBLE
-        binding.errorLinearLayout.visibility = GONE
-    }
-
-    private fun showViewError() {
-        binding.mainActivityRecyclerview.visibility = GONE
-        binding.progressBarHorizontal.visibility = GONE
-        binding.errorLinearLayout.visibility = VISIBLE
+        binding.progressBarRound.visibility = VISIBLE
     }
 
 }
