@@ -1,14 +1,12 @@
-package ru.geekbrains.dictionary.view.main
+package ru.geekbrains.dictionary.view.translation
 
 import androidx.lifecycle.LiveData
-import geekbrains.ru.translator.utils.parseOnlineSearchResults
-import kotlinx.coroutines.Dispatchers
+import geekbrains.ru.translator.utils.parseLocalSearchResults
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import ru.geekbrains.dictionary.model.entities.AppState
 import ru.geekbrains.dictionary.viewModel.BaseViewModel
 
-class MainViewModel (private val interactor: MainInteractor) :
+class TranslationViewModel(private val interactor: TranslationInteractor) :
     BaseViewModel<AppState>() {
 
     private val liveDataForViewToObserve: LiveData<AppState> = _mutableLiveData
@@ -23,9 +21,8 @@ class MainViewModel (private val interactor: MainInteractor) :
         viewModelCoroutineScope.launch { startInteractor(word, isOnline) }
     }
 
-    //Doesn't have to use withContext for Retrofit call if you use .addCallAdapterFactory(CoroutineCallAdapterFactory()). The same goes for Room
-    private suspend fun startInteractor(word: String, isOnline: Boolean) = withContext(Dispatchers.IO) {
-        _mutableLiveData.postValue(parseOnlineSearchResults(interactor.getData(word, isOnline)))
+    private suspend fun startInteractor(word: String, isOnline: Boolean) {
+        _mutableLiveData.postValue(parseLocalSearchResults(interactor.getData(word, isOnline)))
     }
 
     override fun handleError(error: Throwable) {
@@ -33,7 +30,7 @@ class MainViewModel (private val interactor: MainInteractor) :
     }
 
     override fun onCleared() {
-        _mutableLiveData.value = AppState.Success(null)//TODO Workaround. Set View to original state
+        _mutableLiveData.value = AppState.Success(null)//Set View to original state in onStop
         super.onCleared()
     }
 }
