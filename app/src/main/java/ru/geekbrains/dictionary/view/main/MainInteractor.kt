@@ -1,14 +1,14 @@
 package ru.geekbrains.dictionary.view.main
 
-import ru.geekbrains.dictionary.model.entities.AppState
-import ru.geekbrains.dictionary.model.entities.DataModel
-import ru.geekbrains.dictionary.model.repository.IRepository
-import ru.geekbrains.dictionary.model.repository.IRepositoryLocal
-import ru.geekbrains.dictionary.viewModel.Interactor
+import ru.geekbrains.core.Interactor
+import ru.geekbrains.model.AppState
+import ru.geekbrains.model.DataModel
+import ru.geekbrains.repository.Repository
+import ru.geekbrains.repository.RepositoryLocal
 
 class MainInteractor(
-    private val repositoryRemote: IRepository<List<DataModel>>,
-    private val repositoryLocal: IRepositoryLocal<List<DataModel>>
+    private val repositoryRemote: Repository<List<DataModel>>,
+    private val repositoryLocal: RepositoryLocal<List<DataModel>>
 ) : Interactor<AppState> {
 
     override suspend fun getData(word: String, fromRemoteSource: Boolean): AppState {

@@ -6,13 +6,13 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import ru.geekbrains.dictionary.R
-import ru.geekbrains.dictionary.model.entities.DataModel
+import ru.geekbrains.model.DataModel
 
 class MainAdapter(
-    private var onListItemClickListener: OnListItemClickListener,
-    private var data: List<DataModel>
-) :
-    RecyclerView.Adapter<MainAdapter.RecyclerItemViewHolder>() {
+    private var onListItemClickListener: OnListItemClickListener
+) : RecyclerView.Adapter<MainAdapter.RecyclerItemViewHolder>() {
+
+    private var data: List<DataModel> = arrayListOf()
 
     fun setData(data: List<DataModel>) {
         this.data = data

@@ -4,8 +4,8 @@ import android.app.Application
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
 import ru.geekbrains.dictionary.di.application
+import ru.geekbrains.dictionary.di.historyScreen
 import ru.geekbrains.dictionary.di.mainScreen
-import ru.geekbrains.dictionary.di.translationScreen
 
 class DictionaryApp : Application() {
 
@@ -13,7 +13,7 @@ class DictionaryApp : Application() {
         super.onCreate()
         startKoin {
             androidContext(applicationContext)
-            modules(listOf(application, mainScreen, translationScreen))
+            modules(listOf(application, mainScreen, historyScreen))
         }
     }
 }

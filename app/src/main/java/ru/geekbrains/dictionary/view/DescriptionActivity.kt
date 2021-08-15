@@ -10,8 +10,6 @@ import com.squareup.picasso.Callback
 import com.squareup.picasso.Picasso
 import ru.geekbrains.dictionary.R
 import ru.geekbrains.dictionary.databinding.ActivityDescriptionBinding
-import ru.geekbrains.dictionary.utils.isOnline
-import ru.geekbrains.dictionary.utils.ui.AlertDialogFragment
 
 class DescriptionActivity : AppCompatActivity() {
 
@@ -20,7 +18,7 @@ class DescriptionActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_description)
-
+        binding = ActivityDescriptionBinding.inflate(layoutInflater)
         setActionbarHomeButtonAsUp()
         setData()
     }
@@ -50,26 +48,11 @@ class DescriptionActivity : AppCompatActivity() {
         }
     }
 
-    private fun startLoadingOrShowError() {
-        if (isOnline(applicationContext)) {
-            setData()
-        } else {
-            AlertDialogFragment.newInstance(
-                getString(R.string.dialog_title_device_is_offline),
-                getString(R.string.dialog_message_device_is_offline)
-            ).show(
-                supportFragmentManager,
-                DIALOG_FRAGMENT_TAG
-            )
-        }
-    }
-
     private fun usePicassoToLoadPhoto(imageView: ImageView, imageLink: String) {
         Picasso.with(applicationContext).load("https:$imageLink")
             .placeholder(R.drawable.ic_no_photo_vector).fit().centerCrop()
             .into(imageView, object : Callback {
-                override fun onSuccess() {
-                }
+                override fun onSuccess() {}
 
                 override fun onError() {
                     imageView.setImageResource(R.drawable.ic_load_error_vector)
